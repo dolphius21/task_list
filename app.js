@@ -98,6 +98,7 @@ function removeTask(e) {
       e.target.parentElement.parentElement.remove();
       // Remove from local storage
       removeTaskFromLocalStorage(e.target.parentElement.parentElement);
+      console.log(e.target.parentElement.parentElement);
     }
   }
 }
