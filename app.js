@@ -1,149 +1,123 @@
-// Variables
-const form = document.querySelector('#task-form');
-const taskList = document.querySelector('.collection');
-const clearBtn = document.querySelector('.clear-tasks');
-const filter = document.querySelector('#filter');
-const taskInput = document.querySelector('#task');
+// Selectors
+const todoInput = document.querySelector('.todo-input');
+const todoBtn = document.querySelector('.todo-btn');
+const todoList = document.querySelector('.todo-list');
+const todoFilter = document.querySelector('.todo-filter')
 
-// Load all event listeners
-loadEventListeners();
+// Functions
+const displayTodosFromLocalStorage = () => {
+   let storedTodos;
+   if (localStorage.getItem('storedTodos') === null) {
+      storedTodos = [];
+   } else {
+      storedTodos = JSON.parse(localStorage.getItem('storedTodos'));
+   }
+   storedTodos.forEach(StoredTodo => {
+      // Create todo
+      const todoDiv = document.createElement('div');
+      todoDiv.classList.add('todo');
+      todoDiv.innerHTML = `
+      <li class="todo-item">${StoredTodo}</li>
+      <button class="complete-btn"><i class="fas fa-check"></i></button>
+      <button class="trash-btn"><i class="fas fa-trash"></i></button>
+      `
+      // Append to todoList
+      todoList.appendChild(todoDiv);
+   });
+};
 
-function loadEventListeners() {
-  // DOM Load event
-  document.addEventListener('DOMContentLoaded', getTasks);
-  // Add task event
-  form.addEventListener('submit', addTask);
-  // Remove task event
-  taskList.addEventListener('click', removeTask);
-  // Clear task event
-  clearBtn.addEventListener('click', clearTasks);
-  // Filter tasks
-  filter.addEventListener('keyup', filterTasks);
+const addTodoToLocalStorage = todo => {
+   let storedTodos;
+   if (localStorage.getItem('storedTodos') === null) {
+      storedTodos = [];
+   } else {
+      storedTodos = JSON.parse(localStorage.getItem('storedTodos'));
+   }
+   storedTodos.push(todo);
+   localStorage.setItem('storedTodos', JSON.stringify(storedTodos));
+};
+
+const addTodo = e => {
+   e.preventDefault();
+   if (todoInput.value === '') {
+      alert('Please add a task.');
+   } else {
+      // Create todo
+      const todoDiv = document.createElement('div');
+      todoDiv.classList.add('todo');
+      todoDiv.innerHTML = `
+      <li class="todo-item">${todoInput.value}</li>
+      <button class="complete-btn"><i class="fas fa-check"></i></button>
+      <button class="trash-btn"><i class="fas fa-trash"></i></button>
+      `
+      // Append to todoList
+      todoList.appendChild(todoDiv);
+      // Add todo to local storage
+      addTodoToLocalStorage(todoInput.value);
+      // Clear todoInput.value
+      todoInput.value = '';
+   }
 }
 
-// Get tasks from local storage
-function getTasks() {
-  let tasks;
-  if (localStorage.getItem('tasks') === null) {
-    tasks = [];
-  } else {
-    tasks = JSON.parse(localStorage.getItem('tasks'));
-  }
-  tasks.forEach(function(task) {
-    // Create li element
-    const li = document.createElement('li');
-    // Add class
-    li.className = 'collection-item';
-    // Create a text node and append to li
-    li.appendChild(document.createTextNode(task));
-    // Create new link element
-    const link = document.createElement('a');
-    // Add class
-    link.className = 'delete-item secondary-content';
-    // Add icon html
-    link.innerHTML = '<i class="fa fa-remove"></i>';
-    // Append the link to li
-    li.appendChild(link);
-    // Append li to the ul
-    taskList.appendChild(li);
-  });
+const deleteTodoFromLocalStorage = todo => {
+   let storedTodos;
+   if (localStorage.getItem('storedTodos') === null) {
+      storedTodos = [];
+   } else {
+      storedTodos = JSON.parse(localStorage.getItem('storedTodos'));
+   }
+   storedTodos.splice(storedTodos.indexOf(todo), 1);
+   localStorage.setItem('storedTodos', JSON.stringify(storedTodos));
+};
+
+const deleteAndCheck = e => {
+   // delete todo
+   if (e.target.className === 'trash-btn') {
+      const todo = e.target.parentElement;
+      // delete todo from local storage
+      deleteTodoFromLocalStorage(todo.firstElementChild.textContent);
+      todo.classList.add('fall');
+      todo.addEventListener('transitionend', () => {
+         todo.remove();
+      });  
+   }
+   // check todo
+   if (e.target.className === 'complete-btn') {
+      e.target.style.background = '#3FD53F';
+      e.target.previousElementSibling.classList.toggle('completed');
+   }
 }
 
-// Add Task
-function addTask(e) {
-  // Alert
-  if (taskInput.value === '') {
-    alert('Add a task.');
-  }
-  // Create li element
-  const li = document.createElement('li');
-  // Add class
-  li.className = 'collection-item';
-  // Create a text node and append to li
-  li.appendChild(document.createTextNode(taskInput.value));
-  // Create new link element
-  const link = document.createElement('a');
-  // Add class
-  link.className = 'delete-item secondary-content';
-  // Add icon html
-  link.innerHTML = '<i class="fa fa-remove"></i>';
-  // Append the link to li
-  li.appendChild(link);
-  // Append li to the ul
-  taskList.appendChild(li);
-  // Call store in local storage function
-  storeTaskInLocalStorage(taskInput.value);
-  // Clear Input
-  taskInput.value = '';
-  // Prevent default behavior
-  e.preventDefault();
-}
+const filterTodo = e => {
+   const todos = todoList.childNodes;
+   todos.forEach(todo => {
+      // console.log(todo.firstElementChild);
+      switch(e.target.value) {
+         case 'all' : 
+            todo.style.display = 'flex';
+            break;
+         case 'completed':
+            if (todo.firstElementChild.classList.contains('completed')) {
+               todo.style.display = 'flex';
+            } else {
+               todo.style.display = 'none';
+            }
+            break;
+         case 'uncompleted':
+            if (!todo.firstElementChild.classList.contains('completed')) {
+               todo.style.display = 'flex';
+            } else {
+               todo.style.display = 'none';
+            }
+            break;
+      }
+   });
+};
 
-// Store in local storage 
-function storeTaskInLocalStorage(task) {
-  let tasks;
-  if (localStorage.getItem('tasks') === null) {
-    tasks = [];
-  } else {
-    tasks = JSON.parse(localStorage.getItem('tasks'));
-  }
-  tasks.push(task);
-  localStorage.setItem('tasks', JSON.stringify(tasks));
-}
 
-// Remove task
-function removeTask(e) {
-  if (e.target.parentElement.classList.contains('delete-item')) {
-    if (confirm('Are you sure?')) {
-      e.target.parentElement.parentElement.remove();
-      // Remove from local storage
-      removeTaskFromLocalStorage(e.target.parentElement.parentElement);
-      console.log(e.target.parentElement.parentElement);
-    }
-  }
-}
 
-// Remove task from local storage
-function removeTaskFromLocalStorage(taskItem) {
-  let tasks;
-  if (localStorage.getItem('tasks') === null) {
-    tasks = [];
-  } else {
-    tasks = JSON.parse(localStorage.getItem('tasks'));
-  }
-  tasks.forEach(function(task, index) {
-    if (taskItem.textContent === task) {
-      tasks.splice(index, 1);
-    }
-  });
-  localStorage.setItem('tasks', JSON.stringify(tasks));
-}
-
-// Clear tasks
-function clearTasks() {
-  // (alternative solution) taskList.innerHTML = ''; 
-  // Faster performance
-  while (taskList.firstChild) {
-    taskList.removeChild(taskList.firstChild);
-  }
-  // Clear from local storage
-  clearTasksFromLocalStorage();
-}
-
-// Clear tasks from local storage
-function clearTasksFromLocalStorage() {
-  localStorage.clear();
-}
-
-// Filter tasks
-function filterTasks(e) {
-  const text = e.target.value.toLowerCase();
-  document.querySelectorAll('.collection-item').forEach(function(task) {
-    const item = task.firstChild.textContent;
-    if (item.toLowerCase().indexOf(text) !== -1) {
-      task.style.display = 'block';
-    } else {
-      task.style.display = 'none';
-    }
-  });
-}
+// Event Listeners
+todoBtn.addEventListener('click', addTodo);
+todoList.addEventListener('click', deleteAndCheck);
+todoFilter.addEventListener('click', filterTodo);
+document.addEventListener('DOMContentLoaded', displayTodosFromLocalStorage);
